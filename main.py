@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import GridSearchCV
 
 df = pd.read_csv("AAPL_2014_2024.csv", index_col=0, parse_dates=True)
 df["Return"] = df["Close"].pct_change()
@@ -25,9 +26,22 @@ y_test = y.iloc[split:]
 
 test_df = df.iloc[split:]
 
+param_grid = {
+    'n_estimators': [100, 200, 300],
+    'max_depth': [5, 6, 7, None],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
+
+rf = RandomForestRegressor(random_state=42)
+grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, scoring='neg_mean_absolute_error')
+grid_search.fit(X_train, y_train)
+
+
+best_params = grid_search.best_params_
+
 model = RandomForestRegressor(
-    n_estimators=200,
-    max_depth=6,
+    **best_params,
     random_state=42
 )
 
